@@ -123,27 +123,111 @@ function inverseLabrouchere(){
   echo -e "\n${yellowColour}[+]${endColour}${grayColour} Comenzamos con la secuencia${endColour}${blueColour}[${my_secuencia[@]}]${endColour}"
 
   bet=$((${my_secuencia[0]} + ${my_secuencia[-1]}))
+  jugadas_totales=0
+  bet_to_renew=$(($money+50)) # una vez alcanzado hara que renovemos la secuencia a [1 2 3 4]
+  echo "[+] El tope a renovar la secuencia está establesido por encima de los $bet_to_renew"
+#  money=$(($money - $bet))
 
-  unset my_secuencia[0]
-  unset my_secuencia[-1]
-
-  my_secuencia=(${my_secuencia[@]})
-
-  echo -e "${yellowColour}[+]${endColour}${grayColour} Invertimos${endColour}${yellowColour} $bet$ ${endColour}${grayColour} y nuestra secuencia queda en:${endColour}${blueColour}[${my_secuencia[@]}]${endColour}"
+#  echo -e "${yellowColour}[+]${endColour}${grayColour} Invertimos${endColour}${yellowColour} $bet$ ${endColour}"
+#  echo -e "\n${yellowColour}[+]${endColour}${grayColour} Tenemos ${endColour}${yellowColour} $money$ ${endColour}"
   
   tput civis
   while true; do
+    let jugadas_totales+=1
     random_number=$(($RANDOM % 37))
+    money=$(($money - $bet))
+    if [ ! "$money" -lt 0 ]; then
 
-    echo -e "\n${yellowColour}[+]${endColour}${grayColour} Ha salido el número${endColour}${blueColour} $random_number${endColour}"
-      if [ "$par_impar" == "par" ]; then
-        if [ "$(($random_number % 2))" -eq 0 ]; then
-          echo -e "${yellowColour}[+]${endColour}${greenColour} El número es par ¡Ganas!${endColour}"
-        else
-          echo -e "${redColour}[!] El número es impar ¡Pierdes!${endColour}"
+      echo -e "${yellowColour}[+]${endColour}${grayColour} Invertimos${endColour}${yellowColour} $bet$ ${endColour}"
+      echo -e "${yellowColour}[+]${endColour}${grayColour} Tenemos ${endColour}${yellowColour} $money$ ${endColour}"
+      
+      echo -e "\n${yellowColour}[+]${endColour}${grayColour} Ha salido el número${endColour}${blueColour} $random_number${endColour}"
+        if [ "$par_impar" == "par" ]; then
+          if [ "$(($random_number % 2))" -eq 0 ] && [ "$random_number" -ne 0 ]; then
+            echo -e "${yellowColour}[+]${endColour}${greenColour} El número es par ¡Ganas!${endColour}"
+            reward=$(($bet*2))
+            let money+=$reward
+            echo -e "${yellowColour}[+]${endColour}${grayColour} Tienes ${endColour}${yellowColour} $money$ ${endColour}"
+
+            if [ $money -gt $bet_to_renew ]; then
+              echo -e "[!] Se ha superado el tope establesido $bet_to_renew para renovar nuestra secuencia"
+              bet_to_renew=$(($bet_to_renew + 50))
+              echo -e "[!] El tope establesido $bet_to_renew$"
+              my_secuencia=(1 2 3 4)
+              bet=$((${my_secuencia[0]} + ${my_secuencia[-1]}))
+              echo -e "[!] La secuencia ha sido restablecida a: [${my_secuencia[@]}]"
+          else              
+              my_secuencia+=($bet)
+              my_secuencia=(${my_secuencia[@]})
+
+              echo -e "${yellowColour}[+]${endColour}${grayColour} Nuestra nueva secuencia es:${endColour}${greenColour} [${my_secuencia[@]}]${endColour}"
+              
+              if [ "${#my_secuencia[@]}" -ne 1 ] && [ "${#my_secuencia[@]}" -ne 0 ]; then
+                bet=$((${my_secuencia[0]} + ${my_secuencia[-1]}))
+              elif [ "${#my_secuencia[@]}" -eq 1 ]; then
+                bet=${my_secuencia[0]}
+              else           
+                echo -e "${redColour}[!] Hemos perdido nuestra secuencia.${endColour}"
+                my_secuencia=(1 2 3 4)
+                echo -e "${yellowColour}[+]${endColour}${grayColour} Reestablecemos la secuencia${endColour}${greenColour} [${my_secuencia[@]}]${endColour}"
+                bet=$((${my_secuencia[0]} + ${my_secuencia[-1]}))
+              fi
+          fi
+          elif [ "$(($random_number % 2))" -eq 1 ] || [ "$random_number" -eq 0 ]; then
+            if [ "$(($random_number % 2))" -eq 1 ]; then            
+               echo -e "${redColour}[!] El número es impar ¡Pierdes!${endColour}"
+            else
+              echo -e "${redColour}[!] Ha salido el número cero ¡Pierdes!${endColour}"
+            fi
+            
+          if [ $money -lt $(($bet_to_renew-100)) ]; then
+              echo -e "[!] Hemos llegado a un mínimo critico, se procede a reajustar el tope."
+              bet_to_renew=$(($bet_to_renew - 50))
+              echo -e "[+] El tope a sido renovado a $bet_to_renew"
+              
+              unset my_secuencia[0]
+              unset my_secuencia[-1] 2>/dev/null
+              
+              my_secuencia=(${my_secuencia[@]})
+
+              echo -e "${yellowColour}[+]${endColour}${grayColour} Nuestra nueva secuencia es:${endColour}${greenColour} [${my_secuencia[@]}]${endColour}"
+              
+              if [ "${#my_secuencia[@]}" -ne 1 ] && [ "${#my_secuencia[@]}" -ne 0 ]; then
+                bet=$((${my_secuencia[0]} + ${my_secuencia[-1]}))
+              elif [ "${#my_secuencia[@]}" -eq 1 ]; then
+                bet=${my_secuencia[0]}
+              else           
+                echo -e "${redColour}[!] Hemos perdido nuestra secuencia.${endColour}"
+                my_secuencia=(1 2 3 4)
+                echo -e "${yellowColour}[+]${endColour}${grayColour} Reestablecemos la secuencia${endColour}${greenColour} [${my_secuencia[@]}]${endColour}"
+                bet=$((${my_secuencia[0]} + ${my_secuencia[-1]}))
+              fi            
+          else
+              unset my_secuencia[0]
+              unset my_secuencia[-1] 2>/dev/null
+
+              my_secuencia=(${my_secuencia[@]})
+
+              echo -e "${yellowColour}[+]${endColour}${grayColour} La secuencia nos queda de la siguiente forma:${endColour}${greenColour} [${my_secuencia[@]}]${endColour}"
+              if [ "${#my_secuencia[@]}" -ne 1 ] && [ "${#my_secuencia[@]}" -ne 0 ]; then
+                bet=$((${my_secuencia[0]} + ${my_secuencia[-1]}))
+              elif [ "${#my_secuencia[@]}" -eq 1 ]; then
+                bet=${my_secuencia[0]}
+              else
+                echo -e "${redColour}[!] Hemos perdido nuestra secuencia.${endColour}"
+                my_secuencia=(1 2 3 4)
+                echo -e "${yellowColour}[+]${endColour}${grayColour} Reestablecemos la secuencia${endColour}${greenColour} [${my_secuencia[@]}]${endColour}"
+                bet=$((${my_secuencia[0]} + ${my_secuencia[-1]}))
+              fi
+            fi  
+          fi
         fi
-      fi
-    sleep 5
+    #sleep 5
+  else    
+      echo -e "\n${redColour}[!] Te has quedado sin dinero${endColour}"
+      echo -e "\n${yellowColour}[+]${endColour} En total han habido $jugadas_totales jugadas totales"
+      tput cnorm; exit 1
+  fi    
   done
   tput cnorm
   
@@ -161,3 +245,4 @@ if [ $money ] && [ $technique ]; then
 else
   helpPanel
 fi
+
